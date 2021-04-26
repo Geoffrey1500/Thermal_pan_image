@@ -32,7 +32,12 @@ for item in os.listdir(filepath):
     # print(item, type(item), item[:-4])
     df = pd.read_csv(os.path.join(filepath, item), error_bad_lines=False, sep='\t', header=None).drop([0], axis=0)
 
+    # for data from flir tools
     df = df[0].str.split(',', expand=True, ).drop([0, 385], axis=1).astype('float64')
+
+    # for data from flir studio pro
+    # df = df[0].str.split(',', expand=True, ).drop([0], axis=1).astype('float64')
+
     data_array = df.values
 
     # temperature_range = np.max(data_array) - np.min(data_array)
