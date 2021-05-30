@@ -6,7 +6,7 @@ from mpl_toolkits.mplot3d import Axes3D
 import cv2
 
 
-filepath = 'tmp_data/2'
+filepath = 'batch_data/test_csv'
 i_count = 0
 
 
@@ -33,8 +33,10 @@ def histequ(gray, nlevels=256):
 for item in os.listdir(filepath):
     # print(item, type(item), item[:-4])
     df = pd.read_csv(os.path.join(filepath, item), error_bad_lines=False, sep='\t', header=None).drop([0], axis=0)
+    # df = df[0].str.split(',', expand=True, )
+    print(df.head(5))
 
-    df = df[0].str.split(',', expand=True, ).drop([0, 385], axis=1).astype('float64')
+    df = df[0].str.split(',', expand=True, ).drop([0], axis=1).astype('float64')
     data_array = df.values
 
     # temperature_range = np.max(data_array) - np.min(data_array)
@@ -52,10 +54,10 @@ for item in os.listdir(filepath):
 
     img_scaled_with_color = cv2.applyColorMap(temperature_normalized_2, cv2.COLORMAP_JET)
 
-    cv2.imwrite('thermal_test_img/2/colored/' + item[:-4] + '.jpg', img_colored)
-    cv2.imwrite('thermal_test_img/2/gray/' + item[:-4] + '.jpg', temperature_normalized)
-    # cv2.imwrite('thermal_test_img/normalized/' + item[:-4] + '.jpg', img_colored_hist)
-    cv2.imwrite('thermal_test_img/2/scaled_gray/' + item[:-4] + '.jpg', temperature_normalized_2)
-    cv2.imwrite('thermal_test_img/2/scaled_with_color/' + item[:-4] + '.jpg', img_scaled_with_color)
+    cv2.imwrite('batch_data/test_img/' + item[:-4] + '.jpg', img_colored)
+    # cv2.imwrite('thermal_test_img/2/gray/' + item[:-4] + '.jpg', temperature_normalized)
+    # # cv2.imwrite('thermal_test_img/normalized/' + item[:-4] + '.jpg', img_colored_hist)
+    # cv2.imwrite('thermal_test_img/2/scaled_gray/' + item[:-4] + '.jpg', temperature_normalized_2)
+    # cv2.imwrite('thermal_test_img/2/scaled_with_color/' + item[:-4] + '.jpg', img_scaled_with_color)
 
     i_count += 1
