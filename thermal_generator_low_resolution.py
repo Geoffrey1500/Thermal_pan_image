@@ -6,10 +6,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import cv2
 
 
-filepath = 'batch_data/test_csv'
-i_count = 0
-
-
 def histequ(gray, nlevels=256):
     # Compute histogram
     histogram = np.bincount(gray.flatten(), minlength=nlevels)
@@ -30,34 +26,51 @@ def histequ(gray, nlevels=256):
     return uniform_gray
 
 
+def csv_to_array(csv_set_path, img_item):
+    df_for_thermal = pd.read_csv(os.path.join(csv_set_path, img_item), error_bad_lines=False, sep='\t', header=None).drop([0], axis=0)
+
+    df_for_thermal = df_for_thermal[0].str.split(',', expand=True, ).drop([0], axis=1).astype('float64')
+    data_in_array = df_for_thermal.values
+
+    return data_in_array
+
+
+def localEqualHist(image):
+    clahe = cv2.createCLAHE(clipLimit=8, tileGridSize=(5, 5))
+    # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
+    dst = clahe.apply(image)
+
+    return dst
+
+
+data_array_set = np.zeros((288, 384))
+
+filepath = 'batch_data/csv'
+
 for item in os.listdir(filepath):
-    # print(item, type(item), item[:-4])
-    df = pd.read_csv(os.path.join(filepath, item), error_bad_lines=False, sep='\t', header=None).drop([0], axis=0)
-    # df = df[0].str.split(',', expand=True, )
-    print(df.head(5))
+    data_array = csv_to_array(filepath, item)
+    # print(data_array_set.shape)
+    data_array_set = np.dstack((data_array_set, data_array))
 
-    df = df[0].str.split(',', expand=True, ).drop([0], axis=1).astype('float64')
-    data_array = df.values
+data_array_set = data_array_set[:, :, 1::]
+print(data_array_set.shape)
 
-    # temperature_range = np.max(data_array) - np.min(data_array)
-    lowest_temper, highest_temper = 22, 45
-    temperature_range = highest_temper - lowest_temper
-    temperature_normalized = np.floor((data_array - lowest_temper)/temperature_range * 255).astype(np.uint8)
-    # temperature_normalized = np.floor(((data_array - np.min(data_array)) * 255) / temperature_range).astype(np.uint8)
-    img_color_hist = histequ(np.floor((data_array - np.min(data_array))/(np.max(data_array)-np.min(data_array)) * 255).astype(np.int64))
-    # img_color_hist = cv2.equalizeHist(temperature_normalized)
+lowest_temper, highest_temper = max(np.min(data_array_set), 15), min(np.max(data_array_set), 40)
+print(lowest_temper, highest_temper)
 
-    temperature_normalized_2 = np.floor((data_array - np.min(data_array))/(np.max(data_array)-np.min(data_array)) * 255).astype(np.uint8)
+temperature_range = highest_temper - lowest_temper
+print(temperature_range)
 
-    img_colored_hist = cv2.applyColorMap(img_color_hist, cv2.COLORMAP_JET)
-    img_colored = cv2.applyColorMap(temperature_normalized, cv2.COLORMAP_JET)
+k = (1-0)/temperature_range
 
-    img_scaled_with_color = cv2.applyColorMap(temperature_normalized_2, cv2.COLORMAP_JET)
 
-    cv2.imwrite('batch_data/test_img/' + item[:-4] + '.jpg', img_colored)
-    # cv2.imwrite('thermal_test_img/2/gray/' + item[:-4] + '.jpg', temperature_normalized)
-    # # cv2.imwrite('thermal_test_img/normalized/' + item[:-4] + '.jpg', img_colored_hist)
-    # cv2.imwrite('thermal_test_img/2/scaled_gray/' + item[:-4] + '.jpg', temperature_normalized_2)
-    # cv2.imwrite('thermal_test_img/2/scaled_with_color/' + item[:-4] + '.jpg', img_scaled_with_color)
+for i in range(data_array_set.shape[-1]):
+    data_array = data_array_set[:, :, i]
 
-    i_count += 1
+    temperature_normalized = ((data_array - lowest_temper)/temperature_range * 255).astype(np.uint8)
+    # img_enhanced = localEqualHist(data_array)
+    # temperature_normalized = (0 + k * (data_array - lowest_temper))
+    # temperature_normalized = np.floor(data_array * 255).astype(np.uint8)
+    img_enhanced = localEqualHist(temperature_normalized)
+    # img_colored = cv2.applyColorMap(temperature_normalized, cv2.COLORMAP_JET)
+    cv2.imwrite('batch_data/img/' + str(i) + '.jpg', img_enhanced)
