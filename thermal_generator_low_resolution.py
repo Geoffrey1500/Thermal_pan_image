@@ -36,7 +36,7 @@ def csv_to_array(csv_set_path, img_item):
 
 
 def localEqualHist(image):
-    clahe = cv2.createCLAHE(clipLimit=8, tileGridSize=(5, 5))
+    clahe = cv2.createCLAHE(clipLimit=2, tileGridSize=(5, 5))
     # clahe = cv2.createCLAHE(clipLimit=2.0, tileGridSize=(8, 8))
     dst = clahe.apply(image)
 
@@ -67,10 +67,15 @@ k = (1-0)/temperature_range
 for i in range(data_array_set.shape[-1]):
     data_array = data_array_set[:, :, i]
 
+    lowest_temper, highest_temper = np.min(data_array), np.max(data_array)
+
+    temperature_range = highest_temper - lowest_temper
+
     temperature_normalized = ((data_array - lowest_temper)/temperature_range * 255).astype(np.uint8)
     # img_enhanced = localEqualHist(data_array)
     # temperature_normalized = (0 + k * (data_array - lowest_temper))
     # temperature_normalized = np.floor(data_array * 255).astype(np.uint8)
-    img_enhanced = localEqualHist(temperature_normalized)
+    # img_enhanced = localEqualHist(temperature_normalized)
+    img_scaled_with_color = cv2.applyColorMap(temperature_normalized, cv2.COLORMAP_JET)
     # img_colored = cv2.applyColorMap(temperature_normalized, cv2.COLORMAP_JET)
-    cv2.imwrite('batch_data/img/' + str(i) + '.jpg', img_enhanced)
+    cv2.imwrite('batch_data/img3/' + str(i) + '.jpg', img_scaled_with_color)
