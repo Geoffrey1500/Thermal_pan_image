@@ -61,10 +61,27 @@ k = (1-0)/temperature_range
 
 for i in range(data_array_set.shape[-1]):
     data_array = data_array_set[:, :, i]
+
+    data_for_plot = data_array.flatten()
+    data_for_plot = pd.Series(data_for_plot)
+    u = data_for_plot.mean()
+    std = data_for_plot.std()
+    data_c = data_for_plot[np.abs(data_for_plot - u) < 3 * std]
+
+    print(data_for_plot.skew(), data_for_plot.kurt(), "计算偏度与峰度")
+    print(min(data_c), max(data_c), "3倍标准差方法")
+
+    # lowest_temper, highest_temper = max(np.min(data_array_set), 23), min(np.max(data_array_set), 35)
+    lowest_temper, highest_temper = 23, 30
+    print(lowest_temper, highest_temper)
+
+    temperature_range = highest_temper - lowest_temper
+    print(temperature_range)
+
     data_array = (data_array - lowest_temper)/temperature_range * 255
     data_array[data_array < 0] = 0
     data_array[data_array > 255] = 255
-    data_array = abs(data_array - 255)
+    # data_array = abs(data_array - 255)
     # data_array[data_array > 230] = 255
     # data_array[data_array < 230] = 0
 
@@ -73,11 +90,11 @@ for i in range(data_array_set.shape[-1]):
     # img_enhanced = localEqualHist(data_array)
     # temperature_normalized = (0 + k * (data_array - lowest_temper))
     # temperature_normalized = np.floor(data_array * 255).astype(np.uint8)
-    img_enhanced = localEqualHist(temperature_normalized)
+    # img_enhanced = localEqualHist(temperature_normalized)
 
     # img_enhanced = cv2.adaptiveThreshold(img_enhanced, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 5, 5)
-    img_enhanced = cv2.adaptiveThreshold(img_enhanced, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 5)
+    # img_enhanced = cv2.adaptiveThreshold(img_enhanced, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 21, 5)
     # img_enhanced = temperature_normalized
     # img_scaled_with_color = cv2.applyColorMap(temperature_normalized, cv2.COLORMAP_JET)
     # img_enhanced = cv2.applyColorMap(img_enhanced, cv2.COLORMAP_JET)
-    cv2.imwrite('imgs/gray_2/' + str(i) + '.jpg', img_enhanced)
+    cv2.imwrite('imgs/gray_2/' + str(i) + '.jpg', temperature_normalized)
