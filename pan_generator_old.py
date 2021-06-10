@@ -72,8 +72,8 @@ def point_to_panorama(cor_data, color_data, ang_res):
     pixel_x, pixel_y = 2*np.pi/ang_res, np.pi/ang_res
     print(pixel_x, pixel_y)
     r = np.zeros((int(pixel_x) + 1, int(pixel_y) + 1))
-    g = np.zeros((int(pixel_x) + 1, int(pixel_y) + 1))
-    b = np.zeros((int(pixel_x) + 1, int(pixel_y) + 1))
+    # g = np.zeros((int(pixel_x) + 1, int(pixel_y) + 1))
+    # b = np.zeros((int(pixel_x) + 1, int(pixel_y) + 1))
 
     r_ = np.sqrt(np.sum(cor_data ** 2, axis=1))
     lon_ = np.arctan2(cor_data[:, 1], cor_data[:, 0])
@@ -83,13 +83,19 @@ def point_to_panorama(cor_data, color_data, ang_res):
     y_new_ = -np.rint(lat_ / ang_res).astype(np.int32) + int(np.pi*0.5/ang_res)
 
     r[x_new_, y_new_] = color_data[:, 0]*255
-    g[x_new_, y_new_] = color_data[:, 1]*255
-    b[x_new_, y_new_] = color_data[:, 2]*255
+    # g[x_new_, y_new_] = color_data[:, 1]*255
+    # b[x_new_, y_new_] = color_data[:, 2]*255
 
     # base_img = np.dstack((np.flipud(b.T), np.flipud(g.T), np.flipud(r.T)))
-    base_img = np.dstack((np.rot90(b, -1), np.rot90(g, -1), np.rot90(r, -1)))
+    # base_img = np.dstack((np.rot90(b, -1), np.rot90(g, -1)*0, np.rot90(r, -1)*0))
+    # _range = np.max(r_) - np.min(r_)
+    # depth = (r_ - np.min(r_)) / _range
+    # print(depth.shape, "深度形状")
+    # r[x_new_, y_new_] = depth * 255
+    base_img = np.rot90(r, -1)
+    # base_img = np.dstack((np.rot90(b, -1), np.rot90(g, -1), np.rot90(r, -1)))
 
-    kernel = np.ones((3, 3), dtype=np.uint8)
+    kernel = np.ones((2, 2), dtype=np.uint8)
     base_img = cv.morphologyEx(base_img, cv.MORPH_CLOSE, kernel, iterations=1)
 
     return base_img.astype(np.uint8)
@@ -104,7 +110,7 @@ def ordinationConvert(x1, y1, z1, args):
 
 angular_resolution = 0.036/180*np.pi
 start = time.time()
-pcd = o3d.io.read_point_cloud("0.036.pts", format='pts')
+pcd = o3d.io.read_point_cloud("0.018_intensity.pcd")
 cor_set = np.asarray(pcd.points)
 
 # Args = np.array([0, 0, 0, 0, 0, 0, 0.60214721])
@@ -119,41 +125,32 @@ end = time.time()
 print(end-start, "文件读取时间")
 print(cor_set.shape, len(cor_set))
 print(color_set.shape, len(color_set))
-# o3d.visualization.draw_geometries([pcd],
-#                                   zoom=0.3412,
-#                                   front=[0.4257, -0.2125, -0.8795],
-#                                   lookat=[2.6172, 2.0475, 1.532],
-#                                   up=[-0.0694, -0.9768, 0.2024])
-print("hI")
-# cor_set =
-# color_set =
 
-#
-# print("等着显示图片")
-#
+print("hI")
+
 start = time.time()
 pan_img = point_to_panorama(cor_set_after, color_set, angular_resolution)
 end = time.time()
 print(end-start, "全景图转换时间")
-# cv.imwrite('laser_pan_0.036_rotated.png', pan_img)
+cv.imwrite('laser_pan_0.018_intensity.png', pan_img)
 cv.namedWindow("img", 0)
 cv.resizeWindow("img", 1080, 540)
 # cv.resizeWindow("img", 270, 540)
-pixel_x, pixel_y = 2*np.pi/angular_resolution, np.pi/angular_resolution
-
-ptStart = (0, int(pixel_y/2))
-ptEnd = (int(pixel_x), int(pixel_y/2))
-point_color = (0, 0, 255) # BGR
-thickness = 10
-lineType = 4
-cv.line(pan_img, ptStart, ptEnd, point_color, thickness, lineType)
-
-ptStart = (int(pixel_x/2), 0)
-ptEnd = (int(pixel_x/2), int(pixel_y))
-point_color = (0, 0, 255) # BGR
-thickness = 10
-lineType = 4
-cv.line(pan_img, ptStart, ptEnd, point_color, thickness, lineType)
+# pixel_x, pixel_y = 2*np.pi/angular_resolution, np.pi/angular_resolution
+#
+# ptStart = (0, int(pixel_y/2))
+# ptEnd = (int(pixel_x), int(pixel_y/2))
+# point_color = (0, 0, 255) # BGR
+# thickness = 10
+# lineType = 4
+# cv.line(pan_img, ptStart, ptEnd, point_color, thickness, lineType)
+#
+# ptStart = (int(pixel_x/2), 0)
+# ptEnd = (int(pixel_x/2), int(pixel_y))
+# point_color = (0, 0, 255) # BGR
+# thickness = 10
+# lineType = 4
+# cv.line(pan_img, ptStart, ptEnd, point_color, thickness, lineType)
 
 cv.imshow('img', pan_img)
 cv.waitKey(0)
